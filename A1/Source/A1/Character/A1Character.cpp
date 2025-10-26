@@ -8,6 +8,7 @@
 #include "InputMappingContext.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Animation/A1AnimInstance.h"
 
 // Sets default values
 AA1Character::AA1Character()
@@ -29,7 +30,7 @@ void AA1Character::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// IMC µî·Ï -> Áß°£¿¡µµ ¼öÁ¤ °¡´É
+	// IMC ï¿½ï¿½ï¿½ -> ï¿½ß°ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 
 	if (PlayerController)
@@ -38,6 +39,14 @@ void AA1Character::BeginPlay()
 
 		if (Subsystem)
 			Subsystem->AddMappingContext(IMCShoulder, 0);
+	}
+
+	// ì• ë‹ˆë©”ì´ì…˜ í´ë˜ìŠ¤ ìºì‹±
+	A1AnimInstance = Cast<UA1AnimInstance>(GetMesh()->GetAnimInstance());
+
+	if (A1AnimInstance)
+	{
+		A1AnimInstance->OnMontageEnded.AddDynamic(this, &AA1Character::OnAttackMontageEnded);
 	}
 }
 
@@ -65,9 +74,22 @@ void AA1Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	}
 }
 
+void AA1Character::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	bIsAttacking = false;
+}
+
 void AA1Character::Input_Attack(const FInputActionValue& InputValue)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, TEXT("Attack"));
+
+	if (bIsAttacking)
+		return;
+
+	bIsAttacking = true;
+
+	if (A1AnimInstance)
+		A1AnimInstance->PlayAttackMontage();
 }
 
 void AA1Character::Input_Look(const FInputActionValue& InputValue)
